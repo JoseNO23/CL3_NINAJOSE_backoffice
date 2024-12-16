@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Detalle del Vehículo</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="container">
+  <div class="mt-3 mb-3">
+    <h2>Detalle del Vehículo</h2>
+  </div>
+
+  <form th:action="@{/cars/edit}" method="post">
+    <input type="hidden" name="carId" th:value="${car.carId}">
+    <div class="mb-3">
+      <label for="make" class="form-label">Marca</label>
+      <input type="text" id="make" name="make" class="form-control" th:value="${car.make}" required>
+    </div>
+    <div class="mb-3">
+      <label for="model" class="form-label">Modelo</label>
+      <input type="text" id="model" name="model" class="form-control" th:value="${car.model}" required>
+    </div>
+    <div class="mb-3">
+      <label for="ownerName" class="form-label">Propietario</label>
+      <input type="text" id="ownerName" name="ownerName" class="form-control" th:value="${car.ownerName}" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Actualizar</button>
+    <button class="btn btn-secondary" onclick="location.href='/cars/list'" type="button">Cancelar</button>
+  </form>
+</div>
+
+</body>
+</html>
