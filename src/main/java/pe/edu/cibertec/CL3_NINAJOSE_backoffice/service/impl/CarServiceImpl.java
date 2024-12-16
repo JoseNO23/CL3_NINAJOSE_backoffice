@@ -77,30 +77,23 @@ public class CarServiceImpl implements CarService {
         return false;
     }
 
+
+
     @Override
     public boolean createCar(CarDetailsDto carDetailsDto) {
-        if (carRepository.existsById(carDetailsDto.carId())) {
-            return false;
+        if (carDetailsDto == null) {
+            throw new IllegalArgumentException("El objeto CarDetailsDto no puede ser nulo.");
         }
         Car car = new Car();
         car.setMake(carDetailsDto.make());
         car.setModel(carDetailsDto.model());
         car.setYear(carDetailsDto.year());
-        car.setVin(carDetailsDto.vin());
-        car.setLicensePlate(carDetailsDto.licensePlate());
         car.setOwnerName(carDetailsDto.ownerName());
-        car.setOwnerContact(carDetailsDto.ownerContact());
-        car.setPurchaseDate(carDetailsDto.purchaseDate());
-        car.setMileage(carDetailsDto.mileage());
-        car.setEngineType(carDetailsDto.engineType());
-        car.setColor(carDetailsDto.color());
-        car.setInsuranceCompany(carDetailsDto.insuranceCompany());
-        car.setInsurancePolicyNumber(carDetailsDto.insurancePolicyNumber());
-        car.setRegistrationExpirationDate(carDetailsDto.registrationExpirationDate());
-        car.setServiceDueDate(carDetailsDto.serviceDueDate());
-        carRepository.save(car);  // Correcto
+        // Mapea los demás campos según sea necesario.
+        carRepository.save(car);
         return true;
     }
+
 
     public Optional<Car> findById(Integer id) {
         return carRepository.findById(id);

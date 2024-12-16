@@ -6,16 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import pe.edu.cibertec.CL3_NINAJOSE_backoffice.dto.CarDetailsDto;
-import pe.edu.cibertec.CL3_NINAJOSE_backoffice.dto.CarDto;
-import pe.edu.cibertec.CL3_NINAJOSE_backoffice.entity.Car;
-import pe.edu.cibertec.CL3_NINAJOSE_backoffice.repository.CarRepository;
 import pe.edu.cibertec.CL3_NINAJOSE_backoffice.service.CarService;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-
 
 @Controller
 @RequestMapping("/cars")
@@ -23,9 +14,6 @@ public class CarController {
 
     @Autowired
     private CarService carService;
-
-    @Autowired
-    private CarRepository carRepository;
 
     @GetMapping("/list")
     public String listCars(Model model, @RequestParam(value = "error", required = false) String error) {
@@ -39,16 +27,16 @@ public class CarController {
         try {
             CarDetailsDto carDetails = carService.getCarDetailsById(id);
             model.addAttribute("car", carDetails);
-            return "cars-detail"; // Vista que muestra los detalles
+            return "cars-detail";
         } catch (Exception e) {
             model.addAttribute("error", "No se encontró el vehículo: " + e.getMessage());
-            return "error-page"; // Redirige a una página de error personalizada
+            return "error-page";
         }
     }
 
-
     @GetMapping("/add")
     public String addCarForm(Model model) {
+        // Asegúrate de inicializar un objeto vacío para el formulario
         model.addAttribute("car", new CarDetailsDto(
                 null, "", "", null, "", "", "", "",
                 null, null, "", "", "", "", null, null
@@ -57,14 +45,19 @@ public class CarController {
     }
 
     @PostMapping("/add")
-    public String addCar(@ModelAttribute CarDetailsDto carDetailsDto) {
+    public String addCar(@ModelAttribute CarDetailsDto carDetailsDto, Model model) {
         try {
-            carService.createCar(carDetailsDto);
+            boolean isCreated = carService.createCar(carDetailsDto);
+            if (!isCreated) {
+                throw new RuntimeException("El vehículo ya existe o no se pudo guardar.");
+            }
+            return "redirect:/cars/list";
         } catch (Exception e) {
-            return "redirect:/cars/add?error=Unable+to+add+car";
+            model.addAttribute("error", "No se pudo agregar el vehículo: " + e.getMessage());
+            return "cars-add";
         }
-        return "redirect:/cars/list";
     }
+
 
     @GetMapping("/edit/{carId}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -72,33 +65,46 @@ public class CarController {
         return carService.getCarById(carId)
                 .map(car -> {
                     model.addAttribute("car", car);
-                    return "cars-edit";
+                    return "cars-update";
                 })
                 .orElse("redirect:/cars/list?error=Car+not+found");
     }
 
     @PostMapping("/edit")
     @PreAuthorize("hasRole('ADMIN')")
-    public String editCar(@ModelAttribute CarDetailsDto carDetailsDto) {
-        carService.updateCar(carDetailsDto);
-        return "redirect:/cars/list";
+    public String editCar(@ModelAttribute CarDetailsDto carDetailsDto, Model model) {
+        try {
+            carService.updateCar(carDetailsDto);
+            return "redirect:/cars/list";
+        } catch (Exception e) {
+            model.addAttribute("error", "No se pudo actualizar el vehículo: " + e.getMessage());
+            return "cars-update";
+        }
     }
 
-    @GetMapping("/delete/{carId}")
+    @PostMapping("/delete/{carId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public String deleteCar(@PathVariable("carId") Integer carId) {
-        carService.deleteCarById(carId);
-        return "redirect:/cars/list";
+    public String deleteCar(@PathVariable("carId") Integer carId, Model model) {
+        try {
+            boolean isDeleted = carService.deleteCarById(carId);
+            if (!isDeleted) {
+                throw new RuntimeException("No se pudo eliminar el vehículo. ID no encontrado.");
+            }
+            return "redirect:/cars/list";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error al eliminar el vehículo: " + e.getMessage());
+            return "redirect:/cars/list";
+        }
     }
 
     @GetMapping("/update/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public String updateCar(@PathVariable Integer id, Model model) {
-        Optional<Car> car = carService.findById(id);
-        if (car.isPresent()) {
-            model.addAttribute("car", car.get());
-            return "cars-update";
-        }
-        return "redirect:/cars/list?error=Car+not+found";
+    public String updateCarForm(@PathVariable("id") Integer id, Model model) {
+        return carService.getCarById(id)
+                .map(car -> {
+                    model.addAttribute("car", car);
+                    return "cars-update";
+                })
+                .orElse("redirect:/cars/list?error=Car+not+found");
     }
 }
