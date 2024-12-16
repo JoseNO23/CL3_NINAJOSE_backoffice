@@ -11,6 +11,7 @@ import pe.edu.cibertec.CL3_NINAJOSE_backoffice.dto.UserDto;
 import pe.edu.cibertec.CL3_NINAJOSE_backoffice.entity.User;
 import pe.edu.cibertec.CL3_NINAJOSE_backoffice.service.UserService;
 
+import java.security.Principal;
 import java.util.Optional;
 
 @Controller
@@ -40,16 +41,25 @@ public class UserController {
     /**
      * Mostrar el perfil de un usuario
      */
-    @GetMapping("/profile/{id}")
-    public String viewProfile(@PathVariable("id") int id, Model model) {
+    @GetMapping("/profile")
+    public String viewAuthenticatedProfile(Model model, Principal principal) {
         try {
-            userService.getUserById(id).ifPresent(user -> model.addAttribute("user", user));
+            String username = principal.getName();  // Obtener el nombre de usuario autenticado
+            Optional<User> user = userService.findByUsername(username);
+            if (user.isPresent()) {
+                UserDetailDto userDetail = userService.getUserById(user.get().getId()).orElseThrow();
+                model.addAttribute("user", userDetail);
+                return "user-detail";
+            } else {
+                model.addAttribute("error", "Usuario no encontrado.");
+                return "error-page";
+            }
         } catch (Exception e) {
             model.addAttribute("error", "Error al cargar el perfil del usuario: " + e.getMessage());
-            return "error-page"; // Redirige a una página de error personalizada si es necesario
+            return "error-page";
         }
-        return "users/profile";
     }
+
 
 
 

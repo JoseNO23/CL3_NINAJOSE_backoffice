@@ -6,13 +6,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import pe.edu.cibertec.CL3_NINAJOSE_backoffice.repository.UserRepository;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import pe.edu.cibertec.CL3_NINAJOSE_backoffice.service.impl.CustomUserDetailsService;
 
@@ -21,31 +17,32 @@ import pe.edu.cibertec.CL3_NINAJOSE_backoffice.service.impl.CustomUserDetailsSer
 public class SecurityConfig {
 
     @Autowired
-    private CustomUserDetailsService customUserDetailsService;  // Inyectamos el CustomUserDetailsService
+    private CustomUserDetailsService customUserDetailsService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests(auth -> auth
                         .requestMatchers("/login", "/users/add", "error").permitAll()
+                        .requestMatchers("/users/profile/**").authenticated()  // Permitir a cualquier usuario autenticado
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/users/promote/**", "/users/edit/**", "/users/update").hasRole("ADMIN")
+                        .requestMatchers("/users/promote/**", "/users/edit/**", "/users/update/**").hasRole("ADMIN")
+                        .requestMatchers("/cars/details/**").hasAnyRole("ADMIN", "USER")
                         .requestMatchers("/cars/**").hasAnyRole("ADMIN", "USER")
-
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/users/login")  // Página de login
                         .defaultSuccessUrl("/cars/list", true)  // Redirigir a /cars/list después del login
                         .failureUrl("/users/login?error")
-                        .permitAll()  // Permitir a todos acceder al login
-                )
-                .logout(logout -> logout
-                        .logoutUrl("/users/logout")
-                        .logoutSuccessUrl("/users/login?logout")
                         .permitAll()
                 )
-                .exceptionHandling().accessDeniedPage("/access-denied");  // Redirigir a la página de acceso denegado si no tiene permiso
+                .logout(logout -> logout
+                        .logoutUrl("/users/logout")  // URL para manejar el logout
+                        .logoutSuccessUrl("/users/login?logout")  // URL tras logout exitoso
+                        .permitAll()
+                )
+                .exceptionHandling().accessDeniedPage("/access-denied");  // Página para accesos denegados
 
         return http.build();
     }
@@ -59,9 +56,9 @@ public class SecurityConfig {
                 .build();
     }
 
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 }
+

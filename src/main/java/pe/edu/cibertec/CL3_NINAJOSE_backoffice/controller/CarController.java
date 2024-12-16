@@ -34,16 +34,18 @@ public class CarController {
         return "cars";
     }
 
-    @GetMapping("/detail/{id}")
-    public String getCarDetail(@PathVariable Integer id, Model model) {
-        Optional<Car> car = carService.findById(id);
-        if (car.isPresent()) {
-            model.addAttribute("car", car.get());
-            return "cars-detail";
-        } else {
-            return "redirect:/cars/list?error=Car+not+found";
+    @GetMapping("/details/{id}")
+    public String carDetails(@PathVariable("id") int id, Model model) {
+        try {
+            CarDetailsDto carDetails = carService.getCarDetailsById(id);
+            model.addAttribute("car", carDetails);
+            return "cars-detail"; // Vista que muestra los detalles
+        } catch (Exception e) {
+            model.addAttribute("error", "No se encontró el vehículo: " + e.getMessage());
+            return "error-page"; // Redirige a una página de error personalizada
         }
     }
+
 
     @GetMapping("/add")
     public String addCarForm(Model model) {

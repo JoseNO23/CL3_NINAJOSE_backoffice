@@ -35,4 +35,7 @@ public interface UserService {
 
     // Buscar un usuario por ID (modelo User)
     Optional<User> findById(int id);
+
+    Optional<User> findByUsername(String username);
+
 }

@@ -19,4 +19,6 @@ public interface CarService {
     boolean createCar(CarDetailsDto carDetailsDto);
 
     Optional<Car> findById(Integer id);
+
+    CarDetailsDto getCarDetailsById(int carId);
 }

@@ -105,4 +105,29 @@ public class CarServiceImpl implements CarService {
     public Optional<Car> findById(Integer id) {
         return carRepository.findById(id);
     }
+
+
+    @Override
+    public CarDetailsDto getCarDetailsById(int carId) {
+        return carRepository.findById(carId)
+                .map(car -> new CarDetailsDto(
+                        car.getCarId(),
+                        car.getMake(),
+                        car.getModel(),
+                        car.getYear(),
+                        car.getVin(),
+                        car.getLicensePlate(),
+                        car.getOwnerName(),
+                        car.getOwnerContact(),
+                        car.getPurchaseDate(),
+                        car.getMileage(),
+                        car.getEngineType(),
+                        car.getColor(),
+                        car.getInsuranceCompany(),
+                        car.getInsurancePolicyNumber(),
+                        car.getRegistrationExpirationDate(),
+                        car.getServiceDueDate()
+                ))
+                .orElseThrow(() -> new RuntimeException("Vehículo no encontrado con ID: " + carId)); // Usa RuntimeException
+    }
 }
