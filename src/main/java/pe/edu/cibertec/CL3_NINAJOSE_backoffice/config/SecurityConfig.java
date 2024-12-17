@@ -10,6 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import pe.edu.cibertec.CL3_NINAJOSE_backoffice.service.impl.CustomUserDetailsService;
 
 @Configuration
@@ -23,28 +24,37 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests(auth -> auth
-                        .requestMatchers("/login", "/users/add", "error").permitAll()
-                        .requestMatchers("/users/profile/**").authenticated()  // Permitir a cualquier usuario autenticado
+                        .requestMatchers("/login", "/users/add", "users/error").permitAll()
+                        .requestMatchers("/users/profile/**").authenticated()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/users/promote/**", "/users/edit/**", "/users/update/**").hasRole("ADMIN")
+                        .requestMatchers("users/list","users/detail/**","users/demote/","/users/promote/**", "/users/edit/**", "/users/update/**").hasRole("ADMIN")
                         .requestMatchers("/cars/details/**").hasAnyRole("ADMIN", "USER")
                         .requestMatchers("/cars/**").hasAnyRole("ADMIN", "USER")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
-                        .loginPage("/users/login")  // Página de login
-                        .defaultSuccessUrl("/cars/list", true)  // Redirigir a /cars/list después del login
+                        .loginPage("/users/login")
+                        .defaultSuccessUrl("/cars/list", true)
                         .failureUrl("/users/login?error")
                         .permitAll()
                 )
                 .logout(logout -> logout
-                        .logoutUrl("/users/logout")  // URL para manejar el logout
-                        .logoutSuccessUrl("/users/login?logout")  // URL tras logout exitoso
+                        .logoutUrl("/users/logout")
+                        .logoutSuccessUrl("/users/login?logout")
                         .permitAll()
                 )
-                .exceptionHandling().accessDeniedPage("/access-denied");  // Página para accesos denegados
+                .exceptionHandling(exception -> exception
+                        .accessDeniedHandler(accessDeniedHandler()) // Manejador de accesos denegados
+                );
 
         return http.build();
+    }
+
+    @Bean
+    public AccessDeniedHandler accessDeniedHandler() {
+        return (request, response, accessDeniedException) -> {
+            response.sendRedirect("/users/error-page");
+        };
     }
 
     @Bean

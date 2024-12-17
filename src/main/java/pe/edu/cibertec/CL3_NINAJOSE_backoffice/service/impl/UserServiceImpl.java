@@ -24,7 +24,7 @@ public class UserServiceImpl implements UserService {
     private PasswordEncoder passwordEncoder;
 
     @Override
-    public List<UserDto> getAllUsers() throws Exception {
+    public List<UserDto> getAllUsers(){
         List<UserDto> users = new ArrayList<>();
         userRepository.findAll().forEach(user -> users.add(
                 new UserDto(user.getId(),
@@ -36,7 +36,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Optional<UserDetailDto> getUserById(int id) throws Exception {
+    public Optional<UserDetailDto> getUserById(int id) {
         return userRepository.findById(id).map(user -> new UserDetailDto(
                 user.getId(), user.getUsername(), user.getPassword(),
                 user.getEmail(), user.getFirstName(), user.getLastName(),
@@ -45,7 +45,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean updateUser(UserDto userDto) throws Exception {
+    public boolean updateUser(UserDto userDto){
         Optional<User> optionalUser = userRepository.findById(userDto.id());
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
@@ -60,7 +60,32 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean deleteUserById(int id) throws Exception {
+    public boolean updateUsers(UserDetailDto userDetailDto) {
+        Optional<User> optionalUser = userRepository.findById(userDetailDto.id());
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+
+            // Actualizar solo los campos necesarios
+            user.setFirstName(userDetailDto.firstName());
+            user.setLastName(userDetailDto.lastName());
+            user.setEmail(userDetailDto.email());
+
+            // Si la contraseña está presente, actualízala
+            if (userDetailDto.password() != null && !userDetailDto.password().isEmpty()) {
+                user.setPassword(passwordEncoder.encode(userDetailDto.password()));
+            }
+
+            user.setUpdatedAt(new Date());
+            userRepository.save(user);
+            return true;
+        }
+        return false;
+    }
+
+
+
+    @Override
+    public boolean deleteUserById(int id) {
         if (userRepository.existsById(id)) {
             userRepository.deleteById(id);
             return true;
@@ -80,6 +105,12 @@ public class UserServiceImpl implements UserService {
         user.setFirstName(userDetailDto.firstName());
         user.setLastName(userDetailDto.lastName());
         user.setRole("ROLE_USER");
+
+        // Asigna las fechas de creación y actualización
+        Date now = new Date();
+        user.setCreatedAt(now);
+        user.setUpdatedAt(now);
+
         userRepository.save(user);
         return true;
     }
@@ -95,14 +126,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void promoteUserToAdmin(int id) throws Exception {
-        Optional<User> user = userRepository.findById(id);
-        if (user.isEmpty()) {
-            throw new Exception("Usuario no encontrado");
-        }
-        User updatedUser = user.get();
-        updatedUser.setRole("ROLE_ADMIN");
-        userRepository.save(updatedUser);
+    public void promoteUserToAdmin(int id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado con ID: " + id));
+
+        // Cambiar el rol a ADMIN
+        user.setRole("ROLE_ADMIN");
+        userRepository.save(user);
     }
 
     @Override
@@ -113,5 +143,57 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
+    }
+
+    @Override
+    public UserDetailDto getUserDetailsById(int id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado con ID: " + id));
+
+        // Retornar un UserDetailDto basado en la entidad User
+        return new UserDetailDto(
+                user.getId(),
+                user.getUsername(),
+                user.getPassword(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getRole(),
+                user.getCreatedAt(),
+                user.getUpdatedAt()
+        );
+    }
+
+    @Override
+    public List<UserDetailDto> getAllUserDetails() {
+        List<UserDetailDto> users = new ArrayList<>();
+        userRepository.findAll().forEach(user -> users.add(
+                new UserDetailDto(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getPassword(),
+                        user.getEmail(),
+                        user.getFirstName(),
+                        user.getLastName(),
+                        user.getRole(),
+                        user.getCreatedAt(),
+                        user.getUpdatedAt()
+                )
+        ));
+        return users;
+    }
+
+
+    @Override
+    public void demoteUserFromAdmin(Integer id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado con ID: " + id));
+
+        if ("ROLE_ADMIN".equals(user.getRole())) {
+            user.setRole("ROLE_USER"); // Cambia el rol a ROLE_USER
+            userRepository.save(user);
+        } else {
+            throw new IllegalStateException("El usuario no tiene el rol de ADMIN.");
+        }
     }
 }

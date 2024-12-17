@@ -23,10 +23,8 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getUsername())
-                .password(user.getPassword()) // Contraseña cifrada
-                .roles(user.getRole().replace("ROLE_", "")) // Spring Security maneja roles con el prefijo ROLE_
+                .password(user.getPassword())
+                .roles(user.getRole().replace("ROLE_", "")) // Spring Security requiere el formato ROLE_
                 .build();
     }
-
-
 }

@@ -10,32 +10,41 @@ import java.util.Optional;
 public interface UserService {
 
     // Obtener todos los usuarios
-    List<UserDto> getAllUsers() throws Exception;
+    List<UserDto> getAllUsers();
 
     // Obtener usuario por ID
-    Optional<UserDetailDto> getUserById(int id) throws Exception;
+    Optional<UserDetailDto> getUserById(int id);
 
     // Actualizar un usuario basado en un DTO
-    boolean updateUser(UserDto userDto) throws Exception;
+    boolean updateUser(UserDto userDto);
 
     // Eliminar un usuario por ID
-    boolean deleteUserById(int id) throws Exception;
+    boolean deleteUserById(int id);
 
     // Crear un nuevo usuario
     boolean addUser(UserDetailDto userDetailDto) throws Exception;
 
     // Obtener un modelo User por ID
-    Optional<User> getUserModelById(int id) throws Exception;
+    Optional<User> getUserModelById(int id);
 
     // Guardar un modelo User
     void saveUser(User user) throws Exception;
 
     // Promover un usuario a ADMIN
-    void promoteUserToAdmin(int id) throws Exception;
+    void promoteUserToAdmin(int id);
 
     // Buscar un usuario por ID (modelo User)
     Optional<User> findById(int id);
 
     Optional<User> findByUsername(String username);
+
+    UserDetailDto getUserDetailsById(int id);
+
+    List<UserDetailDto> getAllUserDetails();
+
+    void demoteUserFromAdmin(Integer id);
+
+    boolean updateUsers(UserDetailDto userDetailDto);
+
 
 }
